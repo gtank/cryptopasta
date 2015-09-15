@@ -98,13 +98,6 @@ func Sign(data []byte, privkey *ecdsa.PrivateKey) (sig *ECDSASignature, err erro
 }
 
 func Verify(data []byte, sig *ECDSASignature, pubkey *ecdsa.PublicKey) bool {
-	// perform some sanity checks
-	params := pubkey.Curve.Params()
-
-	if params.BitSize != ecdsaBitSize {
-		return false
-	}
-
 	// hash message
 	h := ecdsaHash.New()
 	h.Write(data)
