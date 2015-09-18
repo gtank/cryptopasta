@@ -14,7 +14,7 @@ caveats to the strict copy & paste strategy are:
 
 ## Recommendations
 
-Encryption: 256-bit AES-GCM with default 96-bit tags
+Encryption: 256-bit AES-GCM with default 96-bit nonces
 
 Hashing: SHA-512/256 (preferred) or SHA-256 (compatible)
 
