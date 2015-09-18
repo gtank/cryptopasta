@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"strings"
 	"testing"
 )
@@ -21,7 +22,7 @@ func TestHMACGeneration(t *testing.T) {
 	mac := GenerateHMAC(HMACMessage, HMACKey)
 
 	// note: don't ever actually check HMACs this way
-	if !(strings.Compare(fmt.Sprintf("%x", mac), HMACDigest) == 0) {
+	if strings.Compare(fmt.Sprintf("%x", mac), HMACDigest) != 0 {
 		t.Fail()
 	}
 }
@@ -75,7 +76,7 @@ func TestSignAndVerify(t *testing.T) {
 	}
 }
 
-func TestASNEncoding(t *testing.T) {
+func TestASNEncodeDecode(t *testing.T) {
 	message := []byte("Hello, world!")
 
 	key, err := GenerateSigningKey()
@@ -105,4 +106,52 @@ func TestASNEncoding(t *testing.T) {
 	if !Verify(message, decodedSig, &key.PublicKey) {
 		t.Error("signature was not correct")
 	}
+}
+
+// Test vector from https://tools.ietf.org/html/rfc7515#appendix-A.3.1
+func TestJWTEncoding(t *testing.T) {
+	rBytes := []byte{14, 209, 33, 83, 121, 99, 108, 72, 60, 47, 127, 21,
+		88, 7, 212, 2, 163, 178, 40, 3, 58, 249, 124, 126, 23, 129, 154, 195, 22, 158,
+		166, 101}
+
+	sBytes := []byte{197, 10, 7, 211, 140, 60, 112, 229, 216, 241, 45, 175,
+		8, 74, 84, 128, 166, 101, 144, 197, 242, 147, 80, 154, 143, 63, 127, 138, 131,
+		163, 84, 213}
+
+	expectedResult := "DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8ISlSApmWQxfKTUJqPP3-Kg6NU1Q"
+
+	sig := new(ECDSASignature)
+	sig.R = big.NewInt(0).SetBytes(rBytes)
+	sig.S = big.NewInt(0).SetBytes(sBytes)
+	result := EncodeSignatureJWT(sig)
+
+	if strings.Compare(result, expectedResult) != 0 {
+		t.Fatalf("expected %s, got %s\n", expectedResult, result)
+	}
+}
+
+func TestJWTDecoding(t *testing.T) {
+	rBytes := []byte{14, 209, 33, 83, 121, 99, 108, 72, 60, 47, 127, 21,
+		88, 7, 212, 2, 163, 178, 40, 3, 58, 249, 124, 126, 23, 129, 154, 195, 22, 158,
+		166, 101}
+
+	sBytes := []byte{197, 10, 7, 211, 140, 60, 112, 229, 216, 241, 45, 175,
+		8, 74, 84, 128, 166, 101, 144, 197, 242, 147, 80, 154, 143, 63, 127, 138, 131,
+		163, 84, 213}
+
+	expectedSig := new(ECDSASignature)
+	expectedSig.R = big.NewInt(0).SetBytes(rBytes)
+	expectedSig.S = big.NewInt(0).SetBytes(sBytes)
+
+	testSig := "DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8ISlSApmWQxfKTUJqPP3-Kg6NU1Q"
+
+	resultSig, err := DecodeSignatureJWT(testSig)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if resultSig.R.Cmp(expectedSig.R) != 0 || resultSig.S.Cmp(expectedSig.S) != 0 {
+		t.Fatalf("decoded signature was incorrect")
+	}
+
 }

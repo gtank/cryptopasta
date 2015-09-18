@@ -21,6 +21,7 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"encoding/asn1"
+	"encoding/base64"
 	"errors"
 	"math/big"
 )
@@ -119,5 +120,23 @@ func DecodeSignatureASN1(sigBytes []byte) (*ECDSASignature, error) {
 		return nil, err
 	}
 
+	return sig, nil
+}
+
+// Encode according to https://tools.ietf.org/html/rfc7515#appendix-A.3.1
+func EncodeSignatureJWT(sig *ECDSASignature) string {
+	combinedBytes := append(sig.R.Bytes(), sig.S.Bytes()...)
+	return base64.RawURLEncoding.EncodeToString(combinedBytes)
+}
+
+func DecodeSignatureJWT(b64sig string) (*ECDSASignature, error) {
+	combinedBytes, err := base64.RawURLEncoding.DecodeString(b64sig)
+	if err != nil {
+		return nil, err
+	}
+
+	sig := new(ECDSASignature)
+	sig.R = big.NewInt(0).SetBytes(combinedBytes[:ecdsaBitSize/8])
+	sig.S = big.NewInt(0).SetBytes(combinedBytes[ecdsaBitSize/8:])
 	return sig, nil
 }
