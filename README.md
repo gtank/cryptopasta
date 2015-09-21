@@ -18,6 +18,8 @@ Encryption: 256-bit AES-GCM with default 96-bit nonces
 
 Hashing: SHA-512/256 (preferred) or SHA-256 (compatible)
 
+Password hashing: bcrypt with work factor 12
+
 Message Authentication: HMAC-SHA512/256
 
 Signatures: ECDSA on P256 with SHA256 message digests
@@ -37,6 +39,12 @@ Hashing
 ```
 message := []byte("Hello, world!")
 digest  := Hash(message)
+```
+
+Password hashing
+```
+hashed := HashPassword([]byte(password))
+isPasswordValid := CheckPassword(hashed, []byte(password)) == nil
 ```
 
 Signing
