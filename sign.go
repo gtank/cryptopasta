@@ -80,10 +80,6 @@ func Sign(data []byte, privkey *ecdsa.PrivateKey) (sig *ECDSASignature, err erro
 		return nil, ErrorInvalidParams
 	}
 
-	if !params.IsOnCurve(privkey.X, privkey.Y) {
-		return nil, ErrorInvalidParams
-	}
-
 	// hash message
 	h := ecdsaHash.New()
 	h.Write(data)
