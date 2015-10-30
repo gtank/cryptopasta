@@ -24,25 +24,26 @@ const (
 	BcryptMaxBytes   = 72
 )
 
-// Hashes data using SHA-512/256
+// Hash performs a one-way hash on data using SHA-512/256.
 func Hash(data []byte) [DigestSize]byte {
 	digest := sha512.Sum512_256(data)
 	return digest
 }
 
-// Hashes data using SHA256
-// Use is not recommended except where necessary to preserve compatibility.
+// HashSHA256 performs a one-way hash on data using SHA-256.
+// This hash is secure, but using it carelessly leaves you open to a class of
+// attack that SHA512/256 avoids.
 func HashSHA256(data []byte) [DigestSize]byte {
 	digest := sha256.Sum256(data)
 	return digest
 }
 
-// Returns a bcrypt hash of the password
+// HashPassword generates a bcrypt hash of the password using work factor 12.
 func HashPassword(password []byte) ([]byte, error) {
 	return bcrypt.GenerateFromPassword(password, BcryptWorkFactor)
 }
 
-// Compares a bcrypt hashed password with its possible plaintext equivalent.
+// CheckPassword securely compares a bcrypt hashed password with its possible plaintext equivalent.
 // Returns nil on success, or an error on failure.
 func CheckPassword(hash, password []byte) error {
 	return bcrypt.CompareHashAndPassword(hash, password)
