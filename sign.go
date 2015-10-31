@@ -20,8 +20,6 @@ import (
 	"crypto/elliptic"
 	"crypto/hmac"
 	"crypto/rand"
-	"encoding/asn1"
-	"encoding/base64"
 	"errors"
 	"math/big"
 )
@@ -43,7 +41,7 @@ type ECDSASignature struct {
 	R, S *big.Int
 }
 
-// Generates a 256-bit HMAC key
+// GenerateHMACKey generates a random 256-bit secret key for HMAC use.
 func GenerateHMACKey() ([]byte, error) {
 	key, err := generateBytes(hmacKeySize)
 	if err != nil {
@@ -53,25 +51,27 @@ func GenerateHMACKey() ([]byte, error) {
 	return key, nil
 }
 
-// Generates symmetric signature using HMAC-SHA512/256
+// GenerateHMAC produces a symmetric signature using HMAC-SHA512/256.
 func GenerateHMAC(data, key []byte) []byte {
 	mac := hmac.New(hmacHash.New, key)
 	mac.Write(data)
 	return mac.Sum(nil)
 }
 
-// Checks the supplied MAC against a message using a secure compare function
+// ValidateHMAC securely checks the supplied MAC against a message.
 func ValidateHMAC(data, suppliedMAC, key []byte) bool {
 	expectedMAC := GenerateHMAC(data, key)
 	return hmac.Equal(expectedMAC, suppliedMAC)
 }
 
-// Generates a P-256 ECDSA key using crypto/rand
+// GenerateSigningKey generates a random P-256 ECDSA private key.
 func GenerateSigningKey() (*ecdsa.PrivateKey, error) {
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	return key, err
 }
 
+// Sign signs arbitrary data using ECDSA. The resulting signature should be
+// encoded using the approriate Marshal* function for your use case.
 func Sign(data []byte, privkey *ecdsa.PrivateKey) (sig *ECDSASignature, err error) {
 	// perform some sanity checks
 	params := privkey.Curve.Params()
@@ -94,6 +94,8 @@ func Sign(data []byte, privkey *ecdsa.PrivateKey) (sig *ECDSASignature, err erro
 	return &ECDSASignature{r, s}, nil
 }
 
+// Verify checks a raw ECDSA signature.
+// Returns true if it's valid and false if not.
 func Verify(data []byte, sig *ECDSASignature, pubkey *ecdsa.PublicKey) bool {
 	// hash message
 	h := ecdsaHash.New()
@@ -101,38 +103,4 @@ func Verify(data []byte, sig *ECDSASignature, pubkey *ecdsa.PublicKey) bool {
 	digest := h.Sum(nil)
 
 	return ecdsa.Verify(pubkey, digest, sig.R, sig.S)
-}
-
-// Encodes ECDSA signature as an ASN.1 sequence (X9.62 format)
-// See RFC3278 Section 8.2 for details
-func EncodeSignatureASN1(sig *ECDSASignature) ([]byte, error) {
-	return asn1.Marshal(*sig)
-}
-
-func DecodeSignatureASN1(sigBytes []byte) (*ECDSASignature, error) {
-	sig := new(ECDSASignature)
-	_, err := asn1.Unmarshal(sigBytes, sig)
-	if err != nil {
-		return nil, err
-	}
-
-	return sig, nil
-}
-
-// Encode according to https://tools.ietf.org/html/rfc7515#appendix-A.3.1
-func EncodeSignatureJWT(sig *ECDSASignature) string {
-	combinedBytes := append(sig.R.Bytes(), sig.S.Bytes()...)
-	return base64.RawURLEncoding.EncodeToString(combinedBytes)
-}
-
-func DecodeSignatureJWT(b64sig string) (*ECDSASignature, error) {
-	combinedBytes, err := base64.RawURLEncoding.DecodeString(b64sig)
-	if err != nil {
-		return nil, err
-	}
-
-	sig := new(ECDSASignature)
-	sig.R = big.NewInt(0).SetBytes(combinedBytes[:ecdsaBitSize/8])
-	sig.S = big.NewInt(0).SetBytes(combinedBytes[ecdsaBitSize/8:])
-	return sig, nil
 }
