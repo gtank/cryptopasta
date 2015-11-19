@@ -11,8 +11,8 @@ import (
 	"math/big"
 )
 
-// UnmarshalPublicSigningKey decodes a PEM-encoded ECDSA public key.
-func UnmarshalPublicSigningKey(encodedKey []byte) (*ecdsa.PublicKey, error) {
+// DecodePublicKey decodes a PEM-encoded ECDSA public key.
+func DecodePublicKey(encodedKey []byte) (*ecdsa.PublicKey, error) {
 	block, _ := pem.Decode(encodedKey)
 	if block == nil || block.Type != "PUBLIC KEY" {
 		return nil, fmt.Errorf("marshal: could not decode PEM block type %s", block.Type)
@@ -30,6 +30,21 @@ func UnmarshalPublicSigningKey(encodedKey []byte) (*ecdsa.PublicKey, error) {
 	}
 
 	return ecdsaPub, nil
+}
+
+// EncodePublicKey encodes an ECDSA public key to PEM format.
+func EncodePublicKey(key *ecdsa.PublicKey) ([]byte, error) {
+	derBytes, err := x509.MarshalPKIXPublicKey(key)
+	if err != nil {
+		return nil, err
+	}
+
+	block := &pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: derBytes,
+	}
+
+	return pem.EncodeToMemory(block), nil
 }
 
 // Encodes an ECDSA signature as an ASN.1 sequence (X9.62 format)

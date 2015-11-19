@@ -1,6 +1,7 @@
 package cryptopasta
 
 import (
+	"bytes"
 	"math/big"
 	"strings"
 	"testing"
@@ -16,12 +17,14 @@ BggqhkjOPQMBBw==
 MHcCAQEEIOI+EZsjyN3jvWJI/KDihFmqTuDpUe/if6f/pgGTBta/oAoGCCqGSM49
 AwEHoUQDQgAEhhObKJ1r1PcUw+3REd/TbmSZnDvXnFUSTwqQFo5gbfIlP+gvEYba
 +Rxj2hhqjfzqxIleRK40IRyEi3fJM/8Qhg==
------END EC PRIVATE KEY-----`
+-----END EC PRIVATE KEY-----
+`
 
 var pemECPublicKeyP256 = `-----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEhhObKJ1r1PcUw+3REd/TbmSZnDvX
 nFUSTwqQFo5gbfIlP+gvEYba+Rxj2hhqjfzqxIleRK40IRyEi3fJM/8Qhg==
------END PUBLIC KEY-----`
+-----END PUBLIC KEY-----
+`
 
 // A keypair for NIST P-384 / secp384r1
 // Generated using:
@@ -34,20 +37,27 @@ MIGkAgEBBDAhA0YPVL1kimIy+FAqzUAtmR3It2Yjv2I++YpcC4oX7wGuEWcWKBYE
 oOjj7wG/memgBwYFK4EEACKhZANiAAQub8xaaCTTW5rCHJCqUddIXpvq/TxdwViH
 +tPEQQlJAJciXStM/aNLYA7Q1K1zMjYyzKSWz5kAh/+x4rXQ9Hlm3VAwCQDVVSjP
 bfiNOXKOWfmyrGyQ7fQfs+ro1lmjLjs=
------END EC PRIVATE KEY-----`
+-----END EC PRIVATE KEY-----
+`
 
 var pemECPublicKeyP384 = `-----BEGIN PUBLIC KEY-----
 MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAELm/MWmgk01uawhyQqlHXSF6b6v08XcFY
 h/rTxEEJSQCXIl0rTP2jS2AO0NStczI2Msykls+ZAIf/seK10PR5Zt1QMAkA1VUo
 z234jTlyjln5sqxskO30H7Pq6NZZoy47
------END PUBLIC KEY-----`
+-----END PUBLIC KEY-----
+`
 
-func TestDecodePublicECKey(t *testing.T) {
-	_, err := UnmarshalPublicSigningKey([]byte(pemECPublicKeyP256))
+func TestPublicKeyMarshaling(t *testing.T) {
+	ecKey, err := DecodePublicKey([]byte(pemECPublicKeyP256))
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatal(err)
 	}
+
+	pemBytes, _ := EncodePublicKey(ecKey)
+	if !bytes.Equal(pemBytes, []byte(pemECPublicKeyP256)) {
+		t.Fatal("public key encoding did not match")
+	}
+
 }
 
 func TestASNEncodeDecode(t *testing.T) {
