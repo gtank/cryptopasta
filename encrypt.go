@@ -1,6 +1,5 @@
-// Provides symmetric authenticated encryption.
-//
-// Encryption is handled using 256-bit AES-GCM with the standard 96-bit nonce
+// Provides symmetric authenticated encryption using 256-bit AES-GCM with a
+// random nonce.
 
 package cryptopasta
 
@@ -11,14 +10,15 @@ import (
 
 const aesKeySize = 32 // force 256-bit AES
 
-// GenerateEncryptionKey generates a random 256-bit key for Encrypt() and Decrypt().
+// GenerateEncryptionKey generates a random 256-bit key for Encrypt() and
+// Decrypt().
 func GenerateEncryptionKey() ([]byte, error) {
 	return generateBytes(aesKeySize)
 }
 
-// Encrypt encrypts data using 256-bit AES-GCM.
-// This both hides the content of the data and provides a check that it hasn't been altered.
-// Output takes the form nonce|ciphertext|tag where '|' indicates concatenation.
+// Encrypt encrypts data using 256-bit AES-GCM.  This both hides the content of
+// the data and provides a check that it hasn't been altered.  Output takes the
+// form nonce|ciphertext|tag where '|' indicates concatenation.
 func Encrypt(plaintext, key []byte) (ciphertext []byte, err error) {
 	if len(key) != aesKeySize {
 		return nil, aes.KeySizeError(len(key))
@@ -42,9 +42,9 @@ func Encrypt(plaintext, key []byte) (ciphertext []byte, err error) {
 	return gcm.Seal(nonce, nonce, plaintext, nil), nil
 }
 
-// Decrypt decrypts data using 256-bit AES-GCM.
-// This both hides the content of the data and provides a check that it hasn't been altered.
-// Expects input form nonce|ciphertext|tag where '|' indicates concatenation.
+// Decrypt decrypts data using 256-bit AES-GCM.  This both hides the content of
+// the data and provides a check that it hasn't been altered.  Expects input
+// form nonce|ciphertext|tag where '|' indicates concatenation.
 func Decrypt(ciphertext, key []byte) (plaintext []byte, err error) {
 	if len(key) != aesKeySize {
 		return nil, aes.KeySizeError(len(key))
