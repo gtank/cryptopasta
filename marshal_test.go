@@ -47,6 +47,11 @@ z234jTlyjln5sqxskO30H7Pq6NZZoy47
 -----END PUBLIC KEY-----
 `
 
+var garbagePEM = `-----BEGIN GARBAGE-----
+TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQ=
+-----END GARBAGE-----
+`
+
 func TestPublicKeyMarshaling(t *testing.T) {
 	ecKey, err := DecodePublicKey([]byte(pemECPublicKeyP256))
 	if err != nil {
@@ -58,6 +63,25 @@ func TestPublicKeyMarshaling(t *testing.T) {
 		t.Fatal("public key encoding did not match")
 	}
 
+}
+
+func TestPrivateKeyBadDecode(t *testing.T) {
+	_, err := DecodePrivateKey([]byte(garbagePEM))
+	if err == nil {
+		t.Fatal("decoded garbage data without complaint")
+	}
+}
+
+func TestPrivateKeyMarshaling(t *testing.T) {
+	ecKey, err := DecodePrivateKey([]byte(pemECPrivateKeyP256))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pemBytes, _ := EncodePrivateKey(ecKey)
+	if !strings.HasSuffix(pemECPrivateKeyP256, string(pemBytes)) {
+		t.Fatal("private key encoding did not match")
+	}
 }
 
 func TestASNEncodeDecode(t *testing.T) {

@@ -47,6 +47,49 @@ func EncodePublicKey(key *ecdsa.PublicKey) ([]byte, error) {
 	return pem.EncodeToMemory(block), nil
 }
 
+// DecodePrivateKey decodes a PEM-encoded ECDSA private key.
+func DecodePrivateKey(encodedKey []byte) (*ecdsa.PrivateKey, error) {
+	var skippedTypes []string
+	var block *pem.Block
+
+	for {
+		block, encodedKey = pem.Decode(encodedKey)
+
+		if block == nil {
+			return nil, fmt.Errorf("failed to find EC PRIVATE KEY in PEM data after skipping types %v", skippedTypes)
+		}
+
+		if block.Type == "EC PRIVATE KEY" {
+			break
+		} else {
+			skippedTypes = append(skippedTypes, block.Type)
+			continue
+		}
+	}
+
+	privKey, err := x509.ParseECPrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return privKey, nil
+}
+
+// EncodePrivateKey encodes an ECDSA private key to PEM format.
+func EncodePrivateKey(key *ecdsa.PrivateKey) ([]byte, error) {
+	derKey, err := x509.MarshalECPrivateKey(key)
+	if err != nil {
+		return nil, err
+	}
+
+	keyBlock := &pem.Block{
+		Type:  "EC PRIVATE KEY",
+		Bytes: derKey,
+	}
+
+	return pem.EncodeToMemory(keyBlock), nil
+}
+
 // Encodes an ECDSA signature as an ASN.1 sequence (X9.62 format)
 // See RFC3278 Section 8.2 for details
 func EncodeSignatureASN1(sig *ECDSASignature) ([]byte, error) {
@@ -65,13 +108,15 @@ func DecodeSignatureASN1(sigBytes []byte) (*ECDSASignature, error) {
 	return sig, nil
 }
 
-// Encodes an ECDSA signature according to https://tools.ietf.org/html/rfc7515#appendix-A.3.1
+// Encodes an ECDSA signature according to
+// https://tools.ietf.org/html/rfc7515#appendix-A.3.1
 func EncodeSignatureJWT(sig *ECDSASignature) string {
 	combinedBytes := append(sig.R.Bytes(), sig.S.Bytes()...)
 	return base64.RawURLEncoding.EncodeToString(combinedBytes)
 }
 
-// Decodes an ECDSA signature according to https://tools.ietf.org/html/rfc7515#appendix-A.3.1
+// Decodes an ECDSA signature according to
+// https://tools.ietf.org/html/rfc7515#appendix-A.3.1
 func DecodeSignatureJWT(b64sig string) (*ECDSASignature, error) {
 	combinedBytes, err := base64.RawURLEncoding.DecodeString(b64sig)
 	if err != nil {
