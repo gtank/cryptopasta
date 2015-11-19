@@ -58,8 +58,8 @@ func GenerateHMAC(data, key []byte) []byte {
 	return mac.Sum(nil)
 }
 
-// ValidateHMAC securely checks the supplied MAC against a message.
-func ValidateHMAC(data, suppliedMAC, key []byte) bool {
+// CheckHMAC securely checks the supplied MAC against a message.
+func CheckHMAC(data, suppliedMAC, key []byte) bool {
 	expectedMAC := GenerateHMAC(data, key)
 	return hmac.Equal(expectedMAC, suppliedMAC)
 }

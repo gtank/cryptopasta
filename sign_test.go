@@ -34,7 +34,7 @@ func TestHMACGeneration(t *testing.T) {
 
 func TestHMACValidation(t *testing.T) {
 	expectedBytes, _ := hex.DecodeString(HMACDigest)
-	if !ValidateHMAC(HMACMessage, expectedBytes, HMACKey) {
+	if !CheckHMAC(HMACMessage, expectedBytes, HMACKey) {
 		t.Fail()
 	}
 }
