@@ -15,7 +15,7 @@ cases. Two particular caveats to the strict copy & paste strategy are:
 
 ## Recommendations
 
-Encryption: 256-bit AES-GCM with random 96-bit nonces
+Encryption: nacl secretbox with random 192-bit nonces
 
 Hashing: SHA-512/256 (preferred) or SHA-256 (compatible)
 

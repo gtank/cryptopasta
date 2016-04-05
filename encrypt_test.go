@@ -5,13 +5,13 @@ import (
 	"testing"
 )
 
-func TestEncryptDecryptGCM(t *testing.T) {
-	randomKey, err := generateBytes(aesKeySize)
+func TestEncryptDecrypt(t *testing.T) {
+	randomKey, err := GenerateEncryptionKey()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	gcmTests := []struct {
+	encryptionTests := []struct {
 		plaintext []byte
 		key       []byte
 	}{
@@ -25,7 +25,7 @@ func TestEncryptDecryptGCM(t *testing.T) {
 		},
 	}
 
-	for _, tt := range gcmTests {
+	for _, tt := range encryptionTests {
 		ciphertext, err := Encrypt(tt.plaintext, tt.key)
 		if err != nil {
 			t.Fatal(err)
@@ -43,7 +43,7 @@ func TestEncryptDecryptGCM(t *testing.T) {
 		ciphertext[0] ^= 0xff
 		plaintext, err = Decrypt(ciphertext, tt.key)
 		if err == nil {
-			t.Errorf("gcmOpen should not have worked, but did")
+			t.Errorf("Open should not have worked, but did")
 		}
 	}
 }
