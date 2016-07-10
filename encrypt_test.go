@@ -14,12 +14,13 @@ package cryptopasta
 import (
 	"bytes"
 	"crypto/rand"
+	"io"
 	"testing"
 )
 
 func TestEncryptDecryptGCM(t *testing.T) {
 	randomKey := [32]byte{}
-	_, err := rand.Read(randomKey[:])
+	_, err := io.ReadFull(rand.Reader, randomKey[:])
 	if err != nil {
 		t.Fatal(err)
 	}
