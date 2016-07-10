@@ -15,7 +15,7 @@ package cryptopasta
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"math/rand"
+	"crypto/rand"
 )
 
 // NewEncryptionKey generates a random 256-bit key for Encrypt() and

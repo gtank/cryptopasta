@@ -13,7 +13,7 @@ package cryptopasta
 
 import (
 	"bytes"
-	"math/rand"
+	"crypto/rand"
 	"testing"
 )
 
