@@ -16,13 +16,14 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"io"
 )
 
 // NewEncryptionKey generates a random 256-bit key for Encrypt() and
 // Decrypt(). It panics if the source of randomness fails.
 func NewEncryptionKey() [32]byte {
 	key := [32]byte{}
-	_, err := rand.Read(key[:])
+	_, err := io.ReadFull(rand.Reader, key[:])
 	if err != nil {
 		panic(err)
 	}
@@ -44,7 +45,7 @@ func Encrypt(plaintext []byte, key [32]byte) (ciphertext []byte, err error) {
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
-	_, err = rand.Read(nonce)
+	_, err = io.ReadFull(rand.Reader, nonce)
 	if err != nil {
 		return nil, err
 	}

@@ -31,6 +31,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
+	"io"
 	"math/big"
 )
 
@@ -38,7 +39,7 @@ import (
 // Because key generation is critical, it panics if the source of randomness fails.
 func NewHMACKey() [32]byte {
 	key := [32]byte{}
-	_, err := rand.Read(key[:])
+	_, err := io.ReadFull(rand.Reader, key[:])
 	if err != nil {
 		panic(err)
 	}
