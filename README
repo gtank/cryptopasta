@@ -3,17 +3,18 @@ TL;DR- Copy & paste your crypto code from here instead of Stack Overflow.
 This library demonstrates a suite of basic cryptography from the Go standard
 library. To the extent possible, it tries to hide complexity and help you avoid
 common mistakes. The recommendations were chosen as a compromise between
-cryptographic qualities, the Go standard lib, and my particular existing use
-cases. Some particular design choices I've made are:
+cryptographic qualities, the Go standard lib, and my existing use cases.
 
-1. SHA-512/256. It's faster on 64-bit machines, which all of my users to date
-   have needed. If it doesn't work in your case, simply replace instances of it
-   with ordinary SHA-256.
+Some particular design choices I've made:
 
-2. The specific ECDSA parameters were chosen to work with RFC7518 (i.e. signed
-   JWTs) while using the best implementation of ECDSA available. Go's P-256 is
+1. SHA-512/256 has been chosen as the default hash for the examples. It's
+   faster on 64-bit machines and immune to length extension. If it doesn't work
+   in your case, replace instances of it with ordinary SHA-256.
+
+2. The specific ECDSA parameters were chosen to be compatible with RFC7518[1]
+   while using the best implementation of ECDSA available. Go's P-256 is
    constant-time (which prevents certain types of attacks) while its P-384 and
-   P-521 are not. In JWT terms, this algorithm is called "ES256".
+   P-521 are not.
 
 3. Key parameters are arrays rather than slices so the compiler can help you
    avoid mixing up the arguments. The signing and marshaling functions use the
@@ -38,29 +39,30 @@ The specific recommendations are:
 
 Encryption - 256-bit AES-GCM with random 96-bit nonces
 
-Using AES-GCM (instead of AES-CBC, AES-CFB, or AES-CTR that Go also offers)
-provides authentication in addition to confidentiality. This means that the
-content of your data is hidden and any modification of the encrypted data will
-result in a failure to decrypt (this rules out entire classes of possible
-attacks). Randomized nonces remove the choices around nonce generation and
-management, which are another common source of error in crypto implementations.
+Using AES-GCM (instead of AES-CBC, AES-CFB, or AES-CTR, all of which Go also
+offers) provides authentication in addition to confidentiality. This means that
+the content of your data is hidden and that any modification of the encrypted
+data will result in a failure to decrypt. This rules out entire classes of
+possible attacks. Randomized nonces remove the choices around nonce generation
+and management, which are another common source of error in crypto
+implementations.
 
-The interfaces in this library only allow the use of 256-bit keys.
+The interfaces in this library allow only the use of 256-bit keys.
 
 
 Hashing - HMAC-SHA512/256
 
-Using hash functions directly is fraught with various perils- it's common for
-developers to accidentally write code that is subject to easy collision-finding
-or length extension attacks. HMAC is a function built on top of hashes and it
+Using hash functions directly is fraught with various perils – it's common for
+developers to accidentally write code that is subject to easy collision or
+length extension attacks. HMAC is a function built on top of hashes and it
 doesn't have those problems. Using SHA-512/256 as the underlying hash function
 means the process will be faster on 64-bit machines, but the output will be the
 same length as the more familiar SHA-256.
 
-This particular interface encourages you to scope your hashes with an
-English-language string (a "tag") that describes the purpose of the hash.
-Tagged hashes are a common "security hygiene" measure to ensure that
-hashing the same data for different purposes will produce different outputs.
+This interface encourages you to scope your hashes with an English-language
+string (a "tag") that describes the purpose of the hash. Tagged hashes are a
+common "security hygiene" measure to ensure that hashing the same data for
+different purposes will produce different outputs.
 
 
 Password hashing - bcrypt with work factor 14
@@ -74,7 +76,7 @@ difficulty of brute-force password cracking attempts.
 
 As of 2016, a work factor of 14 should be well on the side of future-proofing
 over performance. If it turns out to be too slow for your needs, you can try
-using 13 or even 12. You should not go below 12.
+using 13 or even 12. You should not go below work factor 12.
 
 
 Symmetric Signatures / Message Authentication - HMAC-SHA512/256
@@ -96,7 +98,7 @@ This comes up most often in the context of web stuff, such as:
    service but are stored by a user. In this case, the service wants to ensure
    that a user doesn't modify the data contained in the token.
 
-Like with encryption, you should always use a 256-bit random key to
+As with encryption, you should always use a 256-bit random key to
 authenticate messages.
 
 
@@ -107,10 +109,13 @@ of when you hear the word "signature". The holder of a private key can sign
 data that anyone who has the corresponding public key can verify.
 
 Go takes very good care of us here. In particular, the Go implementation of
-P-256 is constant time (which protects against side-channel attacks) and the Go
+P-256 is constant time to protect against side-channel attacks, and the Go
 implementation of ECDSA generates safe nonces to protect against the type of
-attack that broke the PS3.
+repeated-nonce attack that broke the PS3.
 
 In terms of JWTs, this algorithm is called "ES256". The functions
 "EncodeSignatureJWT" and "DecodeSignatureJWT" will convert the basic signature
-format to and from the encoding specified by RFC7515.
+format to and from the encoding specified by RFC7515[2]
+
+[1] https://tools.ietf.org/html/rfc7518#section-3.1
+[2] https://tools.ietf.org/html/rfc7515#appendix-A.3
