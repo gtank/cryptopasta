@@ -44,7 +44,7 @@ func TestHMAC(t *testing.T) {
 		dataBytes, _ := hex.DecodeString(tt.data)
 		expectedDigest, _ := hex.DecodeString(tt.digest)
 
-		keyBytes := [32]byte{}
+		keyBytes := &[32]byte{}
 		copy(keyBytes[:], keySlice)
 
 		macDigest := GenerateHMAC(dataBytes, keyBytes)

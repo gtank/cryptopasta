@@ -19,7 +19,7 @@ import (
 )
 
 func TestEncryptDecryptGCM(t *testing.T) {
-	randomKey := [32]byte{}
+	randomKey := &[32]byte{}
 	_, err := io.ReadFull(rand.Reader, randomKey[:])
 	if err != nil {
 		t.Fatal(err)
@@ -27,7 +27,7 @@ func TestEncryptDecryptGCM(t *testing.T) {
 
 	gcmTests := []struct {
 		plaintext []byte
-		key       [32]byte
+		key       *[32]byte
 	}{
 		{
 			plaintext: []byte("Hello, world!"),
