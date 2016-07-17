@@ -57,3 +57,31 @@ func TestEncryptDecryptGCM(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkEncryptDecryptGCM(b *testing.B) {
+	randomKey := &[32]byte{}
+	_, err := io.ReadFull(rand.Reader, randomKey[:])
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	originaltext := []byte("Hello World")
+
+	for i := 0; i < b.N; i++ {
+		ciphertext, err := Encrypt(originaltext, randomKey)
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		plaintext, err := Decrypt(ciphertext, randomKey)
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		if !bytes.Equal(plaintext, originaltext) {
+			b.Errorf("plaintexts don't match")
+		}
+
+		b.SetBytes(int64(len(originaltext)))
+	}
+}
