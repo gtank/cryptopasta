@@ -131,3 +131,30 @@ func TestJWTDecoding(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkJWTEncoding(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		for _, tt := range jwtTest {
+			result := EncodeSignatureJWT(tt.sigBytes)
+
+			if strings.Compare(result, tt.b64sig) != 0 {
+				b.Fatalf("expected %s, got %s\n", tt.b64sig, result)
+			}
+		}
+	}
+}
+
+func BenchmarkJWTDecoding(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		for _, tt := range jwtTest {
+			resultSig, err := DecodeSignatureJWT(tt.b64sig)
+			if err != nil {
+				b.Error(err)
+			}
+
+			if !bytes.Equal(resultSig, tt.sigBytes) {
+				b.Fatalf("decoded signature was incorrect")
+			}
+		}
+	}
+}
