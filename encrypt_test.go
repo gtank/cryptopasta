@@ -15,7 +15,10 @@ import (
 	"bytes"
 	"crypto/rand"
 	"io"
+	"io/ioutil"
 	"testing"
+
+	"golang.org/x/crypto/nacl/secretbox"
 )
 
 func TestEncryptDecryptGCM(t *testing.T) {
@@ -55,5 +58,47 @@ func TestEncryptDecryptGCM(t *testing.T) {
 		if err == nil {
 			t.Errorf("gcmOpen should not have worked, but did")
 		}
+	}
+}
+
+func BenchmarkAESGCM(b *testing.B) {
+	randomKey := &[32]byte{}
+	_, err := io.ReadFull(rand.Reader, randomKey[:])
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	data, err := ioutil.ReadFile("testdata/big")
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.SetBytes(int64(len(data)))
+
+	for i := 0; i < b.N; i++ {
+		Encrypt(data, randomKey)
+	}
+}
+
+func BenchmarkSecretbox(b *testing.B) {
+	randomKey := &[32]byte{}
+	_, err := io.ReadFull(rand.Reader, randomKey[:])
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	nonce := &[24]byte{}
+	_, err = io.ReadFull(rand.Reader, nonce[:])
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	data, err := ioutil.ReadFile("testdata/big")
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.SetBytes(int64(len(data)))
+
+	for i := 0; i < b.N; i++ {
+		secretbox.Seal(nil, data, nonce, randomKey)
 	}
 }
