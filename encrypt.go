@@ -16,8 +16,12 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/binary"
 	"io"
 )
+
+// Counter will be used as the nonce, and must NEVER be repeated!
+var counter uint64
 
 // NewEncryptionKey generates a random 256-bit key for Encrypt() and
 // Decrypt(). It panics if the source of randomness fails.
@@ -45,11 +49,8 @@ func Encrypt(plaintext []byte, key *[32]byte) (ciphertext []byte, err error) {
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
-	_, err = io.ReadFull(rand.Reader, nonce)
-	if err != nil {
-		return nil, err
-	}
-
+	binary.PutUvarint(nonce, counter)
+	counter += 1
 	return gcm.Seal(nonce, nonce, plaintext, nil), nil
 }
 
