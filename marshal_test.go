@@ -72,7 +72,18 @@ func TestPublicKeyMarshaling(t *testing.T) {
 	if !bytes.Equal(pemBytes, []byte(pemECPublicKeyP256)) {
 		t.Fatal("public key encoding did not match")
 	}
+}
 
+func TestPublicKeyDecodeInvalid(t *testing.T) {
+	_, err := DecodePublicKey(nil)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	_, err = DecodePublicKey([]byte("-----BEGIN PUBLIC KEY-----\n-----END PUBLIC KEY-----"))
+	if err == nil {
+		t.Fatal("expected error")
+	}
 }
 
 func TestPrivateKeyBadDecode(t *testing.T) {
